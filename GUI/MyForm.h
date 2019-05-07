@@ -2,6 +2,9 @@
 #include <string>
 #include <iostream>
 #include <msclr\marshal_cppstd.h>
+#include "Procesar.h"
+#include "Persona.h"
+#include "Hash.h"
 
 namespace GUI {
 
@@ -38,7 +41,10 @@ namespace GUI {
 			}
 		}
 	private: System::Windows::Forms::Button^  abrirArchivo_btn;
-	protected:
+	private: Hash* hash = new Hash();
+	private: Procesar* procesamiento = new Procesar();
+	private: bool puedeEliminar = false;
+
 
 	//Elementos Menú Principal
 	private: System::Windows::Forms::Button^  guardar_btn;
@@ -1061,7 +1067,6 @@ namespace GUI {
 		saveFileDialog1->Title = "Guardar como...";
 		saveFileDialog1->Filter = "Comma-separated values (*.csv)|*.csv";
 		saveFileDialog1->ShowDialog();
-		this->label2->Text = saveFileDialog1->FileName;
 
 		//Conversión de System::String 2 std::basic_string
 		System::String^ managedString = saveFileDialog1->FileName;
@@ -1138,10 +1143,37 @@ namespace GUI {
 	//Instrucciones consultar
 	private: System::Void consultarConsultar_btn_Click(System::Object^  sender, System::EventArgs^  e) {
 		//Función para el botón consultar de la pantalla Consultar
-
+		System::String^ managedString = this->inputConsultar_entry->Text;
+		msclr::interop::marshal_context context;
+		std::string strcedula = context.marshal_as<std::string>(managedString);
+		if (!procesamiento->validarCedula(strcedula)) {
+			this->messagebox_Consultar->Text = "Cédula inválida";
+		}
+		else if (!hash->existeCedula(strcedula)) {
+			this->messagebox_Consultar->Text = "Cédula no existe";
+		}
+		else {
+			Persona* persona = hash->buscarPersona(strcedula);
+			String^ nombreRespuesta = gcnew String(persona->getNombre().c_str());
+			String^ ap1Respuesta = gcnew String(persona->getApellido().c_str());
+			String^ ap2Respuesta = gcnew String(persona->getApellido2().c_str());
+			String^ nacimientoRespuesta = gcnew String(persona->getFechaNacimiento().c_str());
+			this->respNombreConsultar_lbl->Text = nombreRespuesta;
+			this->respApellido1->Text = ap1Respuesta;
+			this->label2->Text = ap2Respuesta;
+			this->label4->Text = nacimientoRespuesta;
+			int idx = hash->idx(strcedula);
+			this->messagebox_Consultar->Text = "Colisiones encontradas: " +(*to_string(hash->numeroColisiones(idx)).c_str() - '0');
+		}
 	}
 	private: System::Void volverConsultar_btn_Click(System::Object^  sender, System::EventArgs^  e) {
 		//Función para el botón volver de la pantalla Consultar
+		this->respNombreConsultar_lbl->Text = "";
+		this->respApellido1->Text = "";
+		this->label2->Text = "";
+		this->label4->Text = "";
+		this->inputConsultar_entry->Text = "";
+		this->messagebox_Consultar->Text = "";
 		this->Controls->Clear();
 		this->Controls->Add(this->groupBoxArchivo);
 		this->Controls->Add(this->groupBoxPersonas);
@@ -1156,12 +1188,60 @@ namespace GUI {
 		this->apellido1Insertar_entry->Text = "";
 		this->apellido2Insertar_entry->Text = "";
 		this->nacimientoInsertar_entry->Text = "";
+		this->messageBoxInsertar->Text = "";
 	}
 	private: System::Void insertarInsertar_btn_Click(System::Object^  sender, System::EventArgs^  e) {
 		//Función del botón insertar en la pantalla Insertar
+		System::String^ managedString = this->cedulaInsertar_entry->Text;
+		msclr::interop::marshal_context context;
+		std::string strcedula = context.marshal_as<std::string>(managedString);
+
+		managedString = this->nombreInsertar_entry->Text;
+		std::string strnombre = context.marshal_as<std::string>(managedString);
+
+		managedString = this->apellido1Insertar_entry->Text;
+		std::string strapellido1 = context.marshal_as<std::string>(managedString);
+
+		managedString = this->apellido2Insertar_entry->Text;
+		std::string strapellido2 = context.marshal_as<std::string>(managedString);
+
+		managedString = this->nacimientoInsertar_entry->Text;
+		std::string strnacimiento = context.marshal_as<std::string>(managedString);
+
+		if (!procesamiento->validarCedula(strcedula)) {
+			this->messageBoxInsertar->Text = "Cédula Inválida";
+		}
+		else if (hash->existeCedula(strcedula)) {
+			this->messageBoxInsertar->Text = "Cédula ya existe";
+		}
+		else if  (!procesamiento->validarNombre(strnombre)){
+			this->messageBoxInsertar->Text = "Nombre Inválido";
+		}
+		else if (!procesamiento->validarNombre(strapellido1)) {
+			this->messageBoxInsertar->Text = "Primer Apellido Inválido";
+		}
+		else if (!procesamiento->validarNombre(strapellido2)) {
+			this->messageBoxInsertar->Text = "Segundo Apellido Inválido";
+		}
+		else if (!procesamiento->validarFecha(strnacimiento)) {
+			this->messageBoxInsertar->Text = "Fecha de Nacimiento Inválida";
+		}
+		else {
+			int idx = hash->idx(strcedula);
+			this->messageBoxInsertar->Text = "Inserción exitosa en posición: " + (*to_string(idx).c_str()-'0') + 
+				" con " + (*to_string(hash->numeroColisiones(idx)).c_str()-'0') + " colisiones";
+			hash->añadirPersona(Persona(strcedula, strnombre, strapellido1, strapellido2, strnacimiento));
+		}
+
 	}
 	private: System::Void cancelarInsertar_btn_Click(System::Object^  sender, System::EventArgs^  e) {
 		//Función del botón cancelar en la pantalla Insertar
+		this->cedulaInsertar_entry->Text = "";
+		this->nombreInsertar_entry->Text = "";
+		this->apellido1Insertar_entry->Text = "";
+		this->apellido2Insertar_entry->Text = "";
+		this->nacimientoInsertar_entry->Text = "";
+		this->messageBoxInsertar->Text = "";
 		this->Controls->Clear();
 		this->Controls->Add(this->groupBoxArchivo);
 		this->Controls->Add(this->groupBoxPersonas);
@@ -1171,12 +1251,63 @@ namespace GUI {
 	//Instrucciones eliminar
 	private: System::Void consultarEliminar_btn_Click(System::Object^  sender, System::EventArgs^  e) {
 		//Función del botón consultar en la pantalla Eliminar
+		this->cedulaEliminar_entry->Enabled = false;
+		System::String^ managedString = this->cedulaEliminar_entry->Text;
+		msclr::interop::marshal_context context;
+		std::string strcedula = context.marshal_as<std::string>(managedString);
+		if (!procesamiento->validarCedula(strcedula)) {
+			this->messageBoxEliminar_lbl->Text = "Cédula inválida";
+			puedeEliminar = false;
+		}
+		else if (!hash->existeCedula(strcedula)) {
+			this->messageBoxEliminar_lbl->Text = "Registro no existe";
+			puedeEliminar = false;
+		}
+		else {
+			Persona* persona = hash->buscarPersona(strcedula);
+			String^ nombreRespuesta = gcnew String(persona->getNombre().c_str());
+			String^ ap1Respuesta = gcnew String(persona->getApellido().c_str());
+			String^ ap2Respuesta = gcnew String(persona->getApellido2().c_str());
+			String^ nacimientoRespuesta = gcnew String(persona->getFechaNacimiento().c_str());
+			this->respNombreEliminar_lbl->Text = nombreRespuesta;
+			this->respApellido1Eliminar_lbl->Text = ap1Respuesta;
+			this->respApellido2Eliminar_lbl->Text = ap2Respuesta;
+			this->respNacimientoEliminar_lbl->Text = nacimientoRespuesta;
+			puedeEliminar = true;
+		}
 	}
 	private: System::Void eliminarEliminar_btn_Click(System::Object^  sender, System::EventArgs^  e) {
 		//Función del botón eliminar en la pantalla Eliminar
+		if (!puedeEliminar) {
+		}
+		else {
+			cout << "Eliminando una persona";
+			System::String^ managedString = this->cedulaEliminar_entry->Text;
+			msclr::interop::marshal_context context;
+			std::string strcedula = context.marshal_as<std::string>(managedString);
+			int idx = hash->idx(strcedula);
+			hash->eliminarPersona(strcedula);
+			this->messageBoxEliminar_lbl->Text = "Registro eliminado con " + (*to_string(hash->numeroColisiones(idx)).c_str() - '0')
+				+ " colisiones";
+			this->cedulaEliminar_entry->Enabled = true;
+			this->cedulaEliminar_entry->Text = "";
+			this->respNombreEliminar_lbl->Text = "";
+			this->respApellido1Eliminar_lbl->Text = "";
+			this->respApellido2Eliminar_lbl->Text = "";
+			this->respNacimientoEliminar_lbl->Text = "";
+			puedeEliminar = false;
+		}
 	}
 	private: System::Void cancelarEliminar_btn_Click(System::Object^  sender, System::EventArgs^  e) {
 		//Función del botón cancelar en la pantalla Eliminar
+		puedeEliminar = false;
+		this->cedulaEliminar_entry->Enabled = true;
+		this->cedulaEliminar_entry->Text = "";
+		this->respNombreEliminar_lbl->Text = "";
+		this->respApellido1Eliminar_lbl->Text = "";
+		this->respApellido2Eliminar_lbl->Text = "";
+		this->respNacimientoEliminar_lbl->Text = "";
+		this->messageBoxEliminar_lbl->Text = "";
 		this->Controls->Clear();
 		this->Controls->Add(this->groupBoxArchivo);
 		this->Controls->Add(this->groupBoxPersonas);
