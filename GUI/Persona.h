@@ -20,6 +20,7 @@ public:
 	string getApellido() { return apellido; }
 	string getApellido2() { return apellido2; }
 	string getFechaNacimiento() { return fechaNacimiento; }
+	Persona getPersona() { return Persona(cedula, nombre, apellido, apellido2, fechaNacimiento); }
 	void setCedula(string str) { cedula = str; }
 	void setNombre(string str) { nombre = str; }
 	void setApellido(string str) { apellido = str; }

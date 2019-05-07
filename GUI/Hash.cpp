@@ -129,6 +129,20 @@ void Hash::eliminarPersona(string key)
 }
 
 
+vector<Persona> Hash::devolverPersonas()
+{
+	vector<Persona>personas;
+	for (int i = 0; i < tamañoTabla; i++) {
+		while (tabla[i]) {
+			if (tabla[i]->getNombre() != "vacio") {
+				personas.push_back(tabla[i]->getPersona());
+			}
+			tabla[i] = tabla[i]->sig;
+		}
+	}
+	return personas;
+}
+
 void Hash::imprimirTabla()
 {
 	cout << "\tImprimiendo Tabla Hash\n\n";

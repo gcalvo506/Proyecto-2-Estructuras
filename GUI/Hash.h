@@ -21,6 +21,7 @@ public:
 	int numeroColisiones(int idx);
 	bool existeCedula(string cedula);
 	void eliminarPersona(string key);
+	vector<Persona> devolverPersonas();
 	void imprimirTabla();
 };
 
