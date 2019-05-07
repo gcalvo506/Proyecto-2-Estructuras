@@ -44,7 +44,7 @@ namespace GUI {
 	private: Hash* hash = new Hash();
 	private: Procesar* procesamiento = new Procesar();
 	private: bool puedeEliminar = false;
-
+	private: bool puedeModificar = false;
 
 	//Elementos Menú Principal
 	private: System::Windows::Forms::Button^  guardar_btn;
@@ -1258,10 +1258,12 @@ namespace GUI {
 		if (!procesamiento->validarCedula(strcedula)) {
 			this->messageBoxEliminar_lbl->Text = "Cédula inválida";
 			puedeEliminar = false;
+			this->cedulaEliminar_entry->Enabled = true;
 		}
 		else if (!hash->existeCedula(strcedula)) {
 			this->messageBoxEliminar_lbl->Text = "Registro no existe";
 			puedeEliminar = false;
+			this->cedulaEliminar_entry->Enabled = true;
 		}
 		else {
 			Persona* persona = hash->buscarPersona(strcedula);
@@ -1318,10 +1320,32 @@ namespace GUI {
 	private: System::Void consultarModificar_btn_Click(System::Object^  sender, System::EventArgs^  e) {
 		//Función del botón consultar en la pantalla Modificar
 		this->cedulaModificar_entry->Enabled = false;
-		this->nombreModificar_entry->Enabled = true;
-		this->apellido1Modificar_entry->Enabled = true;
-		this->apellido2Modificar_entry->Enabled = true;
-		this->nacimientoModificar_entry->Enabled = true;
+		System::String^ managedString = this->cedulaModificar_entry->Text;
+		msclr::interop::marshal_context context;
+		std::string strcedula = context.marshal_as<std::string>(managedString);
+		if (!procesamiento->validarCedula(strcedula)) {
+			this->messageBoxModificar_lbl->Text = "Cédula inválida";
+			puedeEliminar = false;
+			this->cedulaModificar_entry->Enabled = true;
+		}
+		else if (!hash->existeCedula(strcedula)) {
+			this->messageBoxModificar_lbl->Text = "Registro no existe";
+			puedeEliminar = false;
+			this->cedulaModificar_entry->Enabled = true;
+		}
+		else {
+			Persona* persona = hash->buscarPersona(strcedula);
+			String^ nombreRespuesta = gcnew String(persona->getNombre().c_str());
+			String^ ap1Respuesta = gcnew String(persona->getApellido().c_str());
+			String^ ap2Respuesta = gcnew String(persona->getApellido2().c_str());
+			String^ nacimientoRespuesta = gcnew String(persona->getFechaNacimiento().c_str());
+			puedeModificar = true;
+			this->cedulaModificar_entry->Enabled = false;
+			this->nombreModificar_entry->Enabled = true;
+			this->apellido1Modificar_entry->Enabled = true;
+			this->apellido2Modificar_entry->Enabled = true;
+			this->nacimientoModificar_entry->Enabled = true;
+		}
 	}
 	private: System::Void limpiarModificar_btn_Click(System::Object^  sender, System::EventArgs^  e) {
 		//Función del botón limpiar en la pantalla Modificar
@@ -1330,17 +1354,65 @@ namespace GUI {
 		this->apellido1Modificar_entry->Enabled = false;
 		this->apellido2Modificar_entry->Enabled = false;
 		this->nacimientoModificar_entry->Enabled = false;
+		this->cedulaModificar_entry->Text = "";
 		this->nombreModificar_entry->Text = "";
 		this->apellido1Modificar_entry->Text = "";
 		this->apellido2Modificar_entry->Text = "";
 		this->nacimientoModificar_entry->Text = "";
-
+		this->messageBoxModificar_lbl->Text = "";
+		puedeModificar = false;
 	}
 	private: System::Void modificarModificar_btn_Click(System::Object^  sender, System::EventArgs^  e) {
 		//Función del botón modificar en la pantalla Modificar
+		if (!puedeModificar) { return; }
+		System::String^ managedString = this->cedulaModificar_entry->Text;
+		msclr::interop::marshal_context context;
+		std::string strcedula = context.marshal_as<std::string>(managedString);
+
+		managedString = this->nombreModificar_entry->Text;
+		std::string strnombre = context.marshal_as<std::string>(managedString);
+
+		managedString = this->apellido1Modificar_entry->Text;
+		std::string strapellido1 = context.marshal_as<std::string>(managedString);
+
+		managedString = this->apellido2Modificar_entry->Text;
+		std::string strapellido2 = context.marshal_as<std::string>(managedString);
+
+		managedString = this->nacimientoModificar_entry->Text;
+		std::string strnacimiento = context.marshal_as<std::string>(managedString);
+
+		if (!procesamiento->validarNombre(strnombre)) {
+			this->messageBoxModificar_lbl->Text = "Nombre Inválido";
+		}
+		else if (!procesamiento->validarNombre(strapellido1)) {
+			this->messageBoxModificar_lbl->Text = "Primer Apellido Inválido";
+		}
+		else if (!procesamiento->validarNombre(strapellido2)) {
+			this->messageBoxModificar_lbl->Text = "Segundo Apellido Inválido";
+		}
+		else if (!procesamiento->validarFecha(strnacimiento)) {
+			this->messageBoxModificar_lbl->Text = "Fecha de Nacimiento Inválida";
+		}
+		else {
+			int idx = hash->idx(strcedula);
+			this->messageBoxModificar_lbl->Text = "Actualización exitosa con: " + (*to_string(hash->numeroColisiones(idx)).c_str() - '0') + " colisiones";
+			hash->modificarPersona(strcedula, strnombre, strapellido1, strapellido2, strnacimiento);
+		}
 	}
 	private: System::Void cancelarModificar_btn_Click(System::Object^  sender, System::EventArgs^  e) {
 		//Función del botón cancelar en la pantalla Modificar
+		puedeModificar = false;
+		this->cedulaModificar_entry->Enabled = true;
+		this->nombreModificar_entry->Enabled = false;
+		this->apellido1Modificar_entry->Enabled = false;
+		this->apellido2Modificar_entry->Enabled = false;
+		this->nacimientoModificar_entry->Enabled = false;
+		this->cedulaModificar_entry->Text = "";
+		this->nombreModificar_entry->Text = "";
+		this->apellido1Modificar_entry->Text = "";
+		this->apellido2Modificar_entry->Text = "";
+		this->nacimientoModificar_entry->Text = "";
+		this->messageBoxModificar_lbl->Text = "";
 		this->Controls->Clear();
 		this->Controls->Add(this->groupBoxArchivo);
 		this->Controls->Add(this->groupBoxPersonas);
