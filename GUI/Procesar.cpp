@@ -71,11 +71,10 @@ bool Procesar::validarNombre(string nombre)
 {
 	int c = 0;
 	int largo = nombre.length();
-	if (largo == 0) return false;
 	for (int i = 0; i < largo; i++) {
-		if (!isupper(nombre[0]) || !isalpha(nombre[i])) return false;
-		return largo>0 && largo <= 25;
+		if (!(isupper(nombre[0])) || !isalpha(nombre[i])) return false;
 	}
+	return largo > 0 && largo <= 25;
 }
 
 bool Procesar::validarFecha(string fecha)
