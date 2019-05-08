@@ -45,6 +45,8 @@ namespace GUI {
 	private: Procesar* procesamiento = new Procesar();
 	private: bool puedeEliminar = false;
 	private: bool puedeModificar = false;
+	private: string* abrirArchivo;
+	private: string* guardarArchivo;
 
 	//Elementos Menú Principal
 	private: System::Windows::Forms::Button^  guardar_btn;
@@ -145,6 +147,9 @@ namespace GUI {
 		/// </summary>
 		void InitializeComponent(void)
 		{
+			hash = new Hash();
+			*guardarArchivo = "";
+			*abrirArchivo = "";
 			System::ComponentModel::ComponentResourceManager^  resources = (gcnew System::ComponentModel::ComponentResourceManager(MyForm::typeid));
 			this->abrirArchivo_btn = (gcnew System::Windows::Forms::Button());
 			this->guardar_btn = (gcnew System::Windows::Forms::Button());
@@ -1038,7 +1043,24 @@ namespace GUI {
 		System::String^ managedString = openFileDialog1->FileName;
 		msclr::interop::marshal_context context;
 		std::string abrir = context.marshal_as<std::string>(managedString);
-		std::cout << abrir << "\n";
+		abrirArchivo = &abrir;
+		if (*abrirArchivo=="openFileDialog1") {
+			*abrirArchivo = "";
+		}
+		else {
+			procesamiento->cargarArchivo(*abrirArchivo);
+			vector<Persona>personas = procesamiento->getPersonas();
+			for (int i = 0; i < personas.size(); i++) {
+				string strcedula = personas[i].getCedula();
+				string strnombre = personas[i].getNombre();
+				string strapellido1 = personas[i].getApellido();
+				string strapellido2 = personas[i].getApellido2();
+				string strnacimiento = personas[i].getFechaNacimiento();
+				this->hash->añadirPersona(Persona(strcedula, strnombre, strapellido1, strapellido2, strnacimiento));
+				//cout << hash->existeCedula(strcedula);
+				//cout << true << "\n";
+			}
+		}
 	}
 	private: System::Void salir_btn_Click(System::Object^  sender, System::EventArgs^  e) {
 		//Función para el botón salir del menú principal
@@ -1046,6 +1068,7 @@ namespace GUI {
 	}
 	private: System::Void consultar_btn_Click(System::Object^  sender, System::EventArgs^  e) {
 		//Función para el botón consultar del menú principal
+		this->hash->imprimirTabla();
 		this->Controls->Clear();
 		this->Controls->Add(this->volverConsultar_btn);
 		this->Controls->Add(this->flowLayoutPanel1);
@@ -1073,9 +1096,22 @@ namespace GUI {
 		msclr::interop::marshal_context context;
 		std::string guardado = context.marshal_as<std::string>(managedString);
 		std::cout << guardado << "\n";
+		guardarArchivo = &guardado;
+		if (*guardarArchivo != "") {
+			procesamiento->setPersonas(hash->devolverPersonas());
+			procesamiento->insertarArchivo(*guardarArchivo);
+		}
 	}
 	private: System::Void guardar_btn_Click(System::Object^  sender, System::EventArgs^  e) {
 		//Función para el botón guardar del menú principal
+		if (*guardarArchivo!="") {
+			procesamiento->setPersonas(hash->devolverPersonas());
+			procesamiento->insertarArchivo(*guardarArchivo);
+		}
+		else if(*abrirArchivo!=""){
+			procesamiento->setPersonas(hash->devolverPersonas());
+			procesamiento->insertarArchivo(*abrirArchivo);
+		}
 	}
 	private: System::Void insertar_btn_Click(System::Object^  sender, System::EventArgs^  e) {
 		//Función para el botón insertar del menú principal
@@ -1149,11 +1185,11 @@ namespace GUI {
 		if (!procesamiento->validarCedula(strcedula)) {
 			this->messagebox_Consultar->Text = "Cédula inválida";
 		}
-		else if (!hash->existeCedula(strcedula)) {
+		else if (!this->hash->existeCedula(strcedula)) {
 			this->messagebox_Consultar->Text = "Cédula no existe";
 		}
 		else {
-			Persona* persona = hash->buscarPersona(strcedula);
+			Persona* persona = this->hash->buscarPersona(strcedula);
 			String^ nombreRespuesta = gcnew String(persona->getNombre().c_str());
 			String^ ap1Respuesta = gcnew String(persona->getApellido().c_str());
 			String^ ap2Respuesta = gcnew String(persona->getApellido2().c_str());

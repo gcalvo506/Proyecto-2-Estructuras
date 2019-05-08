@@ -5,13 +5,12 @@ void Procesar::setPersonas(vector<Persona>p)
 	personas = p;
 }
 
-void Procesar::cargarArchivo()
+void Procesar::cargarArchivo(string ruta)
 {
 	ifstream archivo;
 	string valor;
 	string cedula, nombre, apellido, apellido2, fecha;
-	string casa;
-	archivo.open(casa);
+	archivo.open(ruta);
 	while (archivo.good()) {
 		getline(archivo, cedula, ';');
 		getline(archivo, nombre, ';');
@@ -29,11 +28,10 @@ void Procesar::cargarArchivo()
 	}
 }
 
-void Procesar::insertarArchivo(Persona p)
+void Procesar::insertarArchivo(string ruta)
 {
 	ofstream archivoC;
-	string casa; //Casa = ruta
-	archivoC.open(casa);
+	archivoC.open(ruta);
 	archivoC << "Cedula"<<";";
 	archivoC << "Nombre" << ";";
 	archivoC << "Apellido" << ";";
@@ -46,12 +44,6 @@ void Procesar::insertarArchivo(Persona p)
 		archivoC << personas[i].getApellido2() << ";";
 		archivoC << personas[i].getFechaNacimiento() << ";";
 	}
-	archivoC <<"\n"<<p.getCedula()<<";";
-	archivoC << p.getNombre()<<";";
-	archivoC << p.getApellido()<<";";
-	archivoC << p.getApellido2()<<";";
-	archivoC << p.getFechaNacimiento() <<";";
-	archivoC.close();
 	cout << "Mensaje guardado";
 }
 

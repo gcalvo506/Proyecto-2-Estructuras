@@ -13,8 +13,9 @@ private:
 public:
 	Procesar() { };
 	void setPersonas(vector<Persona>p);
-	void cargarArchivo();
-	void insertarArchivo(Persona mensaje);
+	vector<Persona> getPersonas() { return personas; };
+	void cargarArchivo(string ruta);
+	void insertarArchivo(string ruta);
 	bool validarCedula(string fecha);
 	bool validarNombre(string nombre);
 	bool validarFecha(string fecha);
