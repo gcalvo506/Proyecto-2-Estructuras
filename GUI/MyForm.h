@@ -41,12 +41,12 @@ namespace GUI {
 			}
 		}
 	private: System::Windows::Forms::Button^  abrirArchivo_btn;
-	private: Hash* hash = new Hash();
+	private: Hash* hash;
 	private: Procesar* procesamiento = new Procesar();
 	private: bool puedeEliminar = false;
 	private: bool puedeModificar = false;
-	//private: string* abrirArchivo;
-	//private: string* guardarArchivo;
+	private: string* abrirArchivo;
+	private: string* guardarArchivo;
 
 	//Elementos Menú Principal
 	private: System::Windows::Forms::Button^  guardar_btn;
@@ -1043,12 +1043,13 @@ namespace GUI {
 		System::String^ managedString = openFileDialog1->FileName;
 		msclr::interop::marshal_context context;
 		std::string abrir = context.marshal_as<std::string>(managedString);
-		//abrirArchivo = &abrir;
-		/*if (*abrirArchivo=="openFileDialog1") {
-			*abrirArchivo = "";
+		procesamiento->setRuta(abrir);
+		//cout << *abrirArchivo;
+		if (abrir =="openFileDialog1") {
 		}
 		else {
-			procesamiento->cargarArchivo(*abrirArchivo);
+			hash->limpiarHash();
+			procesamiento->cargarArchivo(abrir);
 			vector<Persona>personas = procesamiento->getPersonas();
 			for (int i = 0; i < personas.size(); i++) {
 				string strcedula = personas[i].getCedula();
@@ -1056,11 +1057,12 @@ namespace GUI {
 				string strapellido1 = personas[i].getApellido();
 				string strapellido2 = personas[i].getApellido2();
 				string strnacimiento = personas[i].getFechaNacimiento();
-				this->hash->añadirPersona(Persona(strcedula, strnombre, strapellido1, strapellido2, strnacimiento));
+				hash->añadirPersona(Persona(strcedula, strnombre, strapellido1, strapellido2, strnacimiento));
 				//cout << hash->existeCedula(strcedula);
 				//cout << true << "\n";
 			}
-		}*/
+			procesamiento->setPersonas({});
+		}
 	}
 	private: System::Void salir_btn_Click(System::Object^  sender, System::EventArgs^  e) {
 		//Función para el botón salir del menú principal
@@ -1068,7 +1070,6 @@ namespace GUI {
 	}
 	private: System::Void consultar_btn_Click(System::Object^  sender, System::EventArgs^  e) {
 		//Función para el botón consultar del menú principal
-		this->hash->imprimirTabla();
 		this->Controls->Clear();
 		this->Controls->Add(this->volverConsultar_btn);
 		this->Controls->Add(this->flowLayoutPanel1);
@@ -1095,23 +1096,35 @@ namespace GUI {
 		System::String^ managedString = saveFileDialog1->FileName;
 		msclr::interop::marshal_context context;
 		std::string guardado = context.marshal_as<std::string>(managedString);
-		std::cout << guardado << "\n";
-		/*guardarArchivo = &guardado;
-		if (*guardarArchivo != "") {
+		procesamiento->setRuta(guardado);
+		if (guardado != "") {
 			procesamiento->setPersonas(hash->devolverPersonas());
-			procesamiento->insertarArchivo(*guardarArchivo);
-		}*/
+			procesamiento->insertarArchivo();
+		}
 	}
 	private: System::Void guardar_btn_Click(System::Object^  sender, System::EventArgs^  e) {
 		//Función para el botón guardar del menú principal
-		/*if (*guardarArchivo!="") {
+		cout<<"Imprimiendo procesamiento->getRuta():"<< procesamiento->getRuta();
+		if (procesamiento->getRuta()!="") {
+			cout<<procesamiento->getRuta();
 			procesamiento->setPersonas(hash->devolverPersonas());
-			procesamiento->insertarArchivo(*guardarArchivo);
+			procesamiento->insertarArchivo();
 		}
-		else if(*abrirArchivo!=""){
-			procesamiento->setPersonas(hash->devolverPersonas());
-			procesamiento->insertarArchivo(*abrirArchivo);
-		}*/
+		else {
+			saveFileDialog1->Title = "Guardar como...";
+			saveFileDialog1->Filter = "Comma-separated values (*.csv)|*.csv";
+			saveFileDialog1->ShowDialog();
+
+			//Conversión de System::String 2 std::basic_string
+			System::String^ managedString = saveFileDialog1->FileName;
+			msclr::interop::marshal_context context;
+			std::string guardado = context.marshal_as<std::string>(managedString);
+			procesamiento->setRuta(guardado);
+			if (guardado != "") {
+				procesamiento->setPersonas(hash->devolverPersonas());
+				procesamiento->insertarArchivo();
+			}
+		}
 	}
 	private: System::Void insertar_btn_Click(System::Object^  sender, System::EventArgs^  e) {
 		//Función para el botón insertar del menú principal

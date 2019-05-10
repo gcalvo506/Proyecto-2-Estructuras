@@ -133,14 +133,31 @@ vector<Persona> Hash::devolverPersonas()
 {
 	vector<Persona>personas;
 	for (int i = 0; i < tamañoTabla; i++) {
-		while (tabla[i]) {
-			if (tabla[i]->getNombre() != "vacio") {
-				personas.push_back(tabla[i]->getPersona());
+		Persona* p = tabla[i];
+		while (p) {
+			if (p->getNombre() != "vacio") {
+				personas.push_back(p->getPersona());
 			}
-			tabla[i] = tabla[i]->sig;
+			p = p->sig;
 		}
+		delete p;
 	}
 	return personas;
+}
+
+void Hash::limpiarHash()
+{
+	string vacio = "vacio";
+	for (int i = 0; i < tamañoTabla; i++) {
+		Persona* p = tabla[i];
+		while (p) {
+			Persona* q = p;
+			p = p->sig;
+			delete q;
+		}
+		delete p;
+		tabla[i]= new Persona(vacio, vacio, vacio, vacio, vacio);
+	}
 }
 
 void Hash::imprimirTabla()

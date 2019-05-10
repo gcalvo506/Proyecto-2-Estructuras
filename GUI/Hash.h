@@ -22,6 +22,7 @@ public:
 	bool existeCedula(string cedula);
 	void eliminarPersona(string key);
 	vector<Persona> devolverPersonas();
+	void limpiarHash();
 	void imprimirTabla();
 };
 
